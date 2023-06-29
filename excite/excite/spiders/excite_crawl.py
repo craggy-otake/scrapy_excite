@@ -6,7 +6,7 @@
 #     name = "excite_crawl"
 #     # allowed_domains = [".+.exblog"]
 #     # start_urls = ["https://www.exblog.jp/"]
-#     start_urls = ["https://zeiss8514.exblog.jp/27754533/"]
+#     start_urls = ["https://katakuchiiwashi.exblog.jp/29597610/"]
 
 #     # sitemap_urls = ["http://www.exblog.jp/sitemap.xml"]
         
@@ -25,7 +25,10 @@
 #                 flag = 1
 #         if flag == 0:
 #             return
-#         texts = response.xpath('//*[@id="main-contents"]//*')
+#         texts = response.xpath('//*[@class="post-main"]')
+#         texts2 = response.xpath('//*[@class="postbody"]')
+#         texts3 = response.xpath('//*[@class="POST_BODY"]')
+#         texts += texts2 + texts3
 #         # texts = response.xpath('//*[@id="main-contents"]/div/div/div/div/div/div')
 #         # texts2 = response.xpath('//*[@id="main-contents"]/div/div/div/div/div/center')
 #         # texts3 = response.xpath('//*[@id="main-contents"]/div/div/div/div/div/text()')
@@ -36,6 +39,7 @@
 #         # texts8 = response.xpath('//*[@id="main-contents"]/div/div/div/div/center')
 #         # texts9 = response.xpath('//*[@id="postSection"]/text()')
 #         # texts += texts2 + texts3 + texts4 + texts5 + texts6 + tects7 + texts8 + texts9
+#         print(texts)
 #         for text in texts:
 #             text = text.extract()
 #             text = text.replace('\n','')
@@ -63,7 +67,7 @@ import re
 
 # conslut with https://orangain.hatenablog.com/entry/scrapy
 class QiitaCrawlSpider(SitemapSpider):
-    name = "excite_crawl"
+    name = "excite_sitemap"
     # allowed_domains = [".+.exblog"]
     start_urls = ["https://www.exblog.jp/"]
 
@@ -79,10 +83,13 @@ class QiitaCrawlSpider(SitemapSpider):
     def parse(self, response):
         flag = 0
         for txt in response.url.split('/'):
-            if txt.isdigit():
+            if txt.isdigit() and len(txt) > 4:
                 flag = 1
         if flag != 0:
-            texts = response.xpath('//*[@id="main-contents"]//*')
+            texts = response.xpath('//*[@class="post-main"]')
+            texts2 = response.xpath('//*[@class="postbody"]')
+            texts3 = response.xpath('//*[@class="POST_BODY"]')
+            texts += texts2 + texts3
             # texts = response.xpath('//*[@id="main-contents"]/div/div/div/div/div/div')
             # texts2 = response.xpath('//*[@id="main-contents"]/div/div/div/div/div/center')
             # texts3 = response.xpath('//*[@id="main-contents"]/div/div/div/div/div/text()')
@@ -93,6 +100,7 @@ class QiitaCrawlSpider(SitemapSpider):
             # texts8 = response.xpath('//*[@id="main-contents"]/div/div/div/div/center')
             # texts9 = response.xpath('//*[@id="postSection"]/text()')
             # texts += texts2 + texts3 + texts4 + texts5 + texts6 + tects7 + texts8 + texts9
+            textsets = set()
             for text in texts:
                 text = text.extract()
                 text = text.replace('\n','')
@@ -106,7 +114,12 @@ class QiitaCrawlSpider(SitemapSpider):
                     continue
                 if items['text'][:2] == 'タグ':
                     break
-                with open('output_debug3.jsonl', 'a', encoding='utf-8') as writer:
+                sento = items['text'][:min(10,len(items['text']))]
+                if sento in textsets:
+                    continue
+                else:
+                    textsets.add(sento)
+                with open('output.jsonl', 'a', encoding='utf-8') as writer:
                     json.dump(items, writer, ensure_ascii=False)
                     writer.write('\n')
 
